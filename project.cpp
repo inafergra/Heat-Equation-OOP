@@ -232,7 +232,7 @@ class Matrix
                         return it->second;
                     }
                 }
-                matrixMap.insert( {ij  ,0});
+                matrixMap.insert( {ij, 0});
                 return matrixMap.at(ij);
             }
         }
@@ -270,11 +270,22 @@ class Matrix
             return rows;
         }
 
-        map <pair<int, int>, T> Map() const 
+        map <pair<int, int>, T> Map() const   //reference?????
         {
             return matrixMap;
         }
 
+        void print_matrix()
+        {
+            for(int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < columns; j++)
+                    {
+                        cout << matrixMap[{i,j}]<<" ";
+                    }
+                cout<<""<<endl; 
+            }
+        }
 };
 
 template<typename T, typename U>
@@ -309,6 +320,138 @@ Vector<typename std::common_type<T,U>::type> operator*(const Matrix<T>& lhs, con
     }
 }
 
+template<typename T>
+int cg(const Matrix<T>& A, const Vector<T>& b, Vector<T>& x, T tol = (T)1e-8, int maxiter = 100)
+{
+
+    // CHECK IF SYMMETRIC?????
+
+    Vector<T> p = b - A*x;
+    Vector<T> r = b - A*x;
+
+
+    T alpha, beta, prev_dot;
+    int k=0;
+    while (k< maxiter)
+    {
+        prev_dot = dot(r,r);
+
+        alpha = prev_dot / dot(A*p, p);
+        x = x + (alpha*p);
+        r = r - alpha*(A*p);
+        
+        if (dot(r,r) <= tol*tol)
+        {
+            return k;
+        }
+
+        beta = dot(r,r) / prev_dot;
+        p = r + beta*p;
+        ++k;
+    }
+    
+    return -1;
+}
+
+template <int n, typename T>
+class Heat
+{
+    // Your implementation of the heat class starts here
+    private:
+        T alpha;
+        int m;
+        T dt;
+        Matrix<T> M;
+    public:
+        
+        Heat(T a, int mu ,T timestep) : alpha(a),m(mu),dt(timestep)
+        {
+            int points = (int) pow(mu,n);
+            Matrix<T> Mt( points, points );
+            T coeff = alpha*(m+1)*(m+1)*dt;
+            
+            for(int j=points-1 ; j>=0 ; j--)
+            {
+                Mt[{j,j}] = 1 + coeff*(2*n);
+
+                for(int k=0 ; k<n ; k++)
+                {
+                    bool boundary_exception = !(j%(int)pow(m,k+1) < (int)pow(m,k));
+                    if(boundary_exception)
+                    {
+                        for(int i=0 ; i<j ; i++)
+                        {
+                            bool is_neighbour = (j-i)==(int)pow(m,k);
+                            if(is_neighbour)
+                            {
+                                Mt[{i,j}] = -coeff;
+                                Mt[{j,i}] = -coeff;
+                            }
+                        }
+                    }   
+                }
+            }
+            M = Mt;
+        }
+
+        void print_heat_matrix()
+        {
+            M.print_matrix();
+        }
+        
+        Matrix<T> get_matrix() const
+        {
+            return M;
+        }
+
+
+        Vector<T> exact(T t) const
+        {   
+            int points = (int)pow(m,n);
+            Vector<T> sol(points);
+            T dx = (T)1/(m+1); //
+            for(int i = 0; i < points; i++)
+            {
+                sol[i] = exp(-t*n*alpha* pow(M_PI,2) );
+                for (int k = 0; k < n; k++)
+                {
+                    int xk_index = i%(int)pow(m,k+1)/((int)pow(m,k));
+                    T xk = xk_index * dx + dx;
+                    sol[i] *= sin( M_PI * xk );
+                }
+            }
+            return sol;
+        }
+
+        Vector<T> solve(T t) const
+        {
+            int points = (int)pow(m,n);   //  Mwl+1=wl
+            Vector<T> sol(points);
+            T dx = (T)1/(m+1);
+            
+            for(int i = 0; i < points; i++)
+            {
+                sol[i] = 1;
+                for (int k = 0; k < n; k++)
+                {
+                    int xk_index = i%(int)pow(m,k+1)/((int)pow(m,k));
+                    T xk = xk_index * dx + dx;
+                    sol[i] *= sin( M_PI * xk );
+                }
+            }
+            int nnc = 0;
+            for (T l = 0; l < t ; l+=dt )
+            {
+                int iter = cg( M , sol, sol);
+                if(iter==-1)
+                {
+                    ++nnc;
+                }
+            }
+            cout<<" Non convergences: "<<nnc<<endl;
+            return sol;
+        }
+};
 
 
 int main()
@@ -318,6 +461,7 @@ int main()
     Vector<int> b({1,2});
     Vector<int> c(b);
     Vector<int> f = b + c;
+    Vector<int> x({1,1});
     f=f*8;
 
     Matrix<int> A(2,2);
@@ -325,27 +469,47 @@ int main()
     A[{0,0}] =2;
     A[{1,1}] =3;
     cout<< (A*b)[1] << endl;
+
+    int S = cg<int>(A, b, x);
+    
+    }
+    
     //cout<<A[{0,1}];
     
     //Vector<int> d = A*b;
     //cout<<d[0];
+
+    Heat<2,double> Aa(0.3125, 99, 0.001);
+    
+    Vector<double> ex = Aa.exact(1.);
+    Vector<double> num = Aa.solve(1.);      
+
+    for (int i = 0; i < ex.len(); i++)
+    {
+        cout<<ex[i] - num[i]<<" "<<endl;
+    }
+    
+    /*/
+    Matrix<double> mat = Aa.get_matrix();
+    for (int i = 0; i < mat.row(); i++) 
+    { 
+        for (int j = 0; j < mat.col(); j++) 
+        { 
+            cout << mat[{i,j}]<< " "; 
+        }
+        
+    // Newline for new row 
+    cout << endl; 
+    }   
+    */
+    
+
     return 0;
 }
+
 /*
-template<typename T>
-int cg(const Matrix<T>& A, 
-       const Vector<T>& b, 
-       Vector<T>&       x, 
-       T                tol     = (T)1e-8, 
-       int              maxiter = 100)
-{
-    // Your implementation of the cg function starts here
-}
-template <int n, typename T>
-class Heat
-{
-    // Your implementation of the heat class starts here
-};
+
+
 int main(int argc, char* argv[])
 {
     
@@ -358,3 +522,69 @@ int main(int argc, char* argv[])
     return 0;
 }
 */
+
+
+
+           
+        
+        // Ina's implementation
+        /*for (int i = 0; i < points; i++)
+        {
+            for (int j = 0; j< points; j++)
+            {
+
+                if(i == j)
+                {
+                    M[i,j] = 1 + alpha*(dt/(dx*dx))*(2*n);
+                }
+                else
+                {
+                    for (auto k = 0; k<n-1; k++)
+                    {   
+                        if (i%pow(m,k) != 0 && (i+1)%pow(m,k) != 0 ) // NOT boundary points
+                        {
+                            M[i,j + pow(m,k)] = 1 + alpha*(dt/(dx*dx));
+                            M[i,j - pow(m,k)] = 1 + alpha*(dt/(dx*dx));
+                        }
+                        else if (i%pow(m,k) = 0)  // no left neighbour in dimension k
+                        {
+                            M[i,j + pow(m,k)] = 1 + alpha*(dt/(dx*dx)); // only right neighbour in dim k
+                        }
+                        else if ((i+1)%pow(m,k) = 0)  // no right neighbour in dimension k
+                        {
+                            M[i,j - pow(m,k)] = 1 + alpha*(dt/(dx*dx)); // only left neighbour in dim k
+                        }
+                        
+                    }
+                    
+                }      
+            } 
+        }
+
+            // smito TEST
+            int points = (int) pow(mu,n);
+            Matrix<T> M( points, points );
+            T dx=1/(mu+1);
+            
+            
+            for (int i = 0; i < points; i++)
+            {
+                M[{i,i}] = 1 + alpha*(dt/(dx*dx))*(2*n);
+                
+                for (int j = i+1; j < points; j++)
+                {      
+                    for(int k = 0; k < n; k++)
+                    {
+                        if((j-i)==pow(m,k) && !(j%pow(m,k+1) < pow(m,k)) )
+                        {
+                            M[{i,j}] = -alpha*(dt/(dx*dx));
+                            M[{j,i}] = -alpha*(dt/(dx*dx));
+                        }
+                    }                   
+                }
+            }
+            */
+            // Loop magic              }
+            
+            
+            // Loop magic
