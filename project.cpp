@@ -286,18 +286,25 @@ Vector<typename std::common_type<T,U>::type> operator*(const Matrix<T>& lhs, con
     }
     else
     {
-        map <pair<int, int>, T>  matmap = lhs.Map();
+        //map <pair<int, int>, T>  matmap = lhs.Map();
         Vector<typename std::common_type<T,U>::type> result_vector(lhs.row());
         for(int i = 0; i < lhs.row(); i++)      
         {
             result_vector[i] = 0;
         }
-        for(auto it = matmap.begin(); it != matmap.end(); ++it)
+
+        for (auto const& it : lhs.Map()) // This is a c++14 thing that works
+        {
+            int i = it.first.first;
+            int j = it.first.second;
+            result_vector[i] += rhs[j]*it.second;
+        }
+        /*for(auto it = matmap.begin(); it != matmap.end(); ++it)
         {
             int i = it->first.first;
             int j = it->first.second;
             result_vector[i] += rhs[j]*matmap.at({i,j});
-        }
+        }*/
     return result_vector;
     }
 }
@@ -313,17 +320,18 @@ int main()
     Vector<int> f = b + c;
     f=f*8;
 
-    Matrix<int> A(10,2);
+    Matrix<int> A(2,2);
 
-    A[{0,1}] =2;
-    cout<<A[{0,1}];
+    A[{0,0}] =2;
+    A[{1,1}] =3;
+    cout<< (A*b)[1] << endl;
+    //cout<<A[{0,1}];
     
-    Vector<int> d = A*b;
-    cout<<d[0];
+    //Vector<int> d = A*b;
+    //cout<<d[0];
     return 0;
 }
 /*
-
 template<typename T>
 int cg(const Matrix<T>& A, 
        const Vector<T>& b, 
@@ -333,25 +341,20 @@ int cg(const Matrix<T>& A,
 {
     // Your implementation of the cg function starts here
 }
-
 template <int n, typename T>
 class Heat
 {
     // Your implementation of the heat class starts here
 };
-
-
 int main(int argc, char* argv[])
 {
     
     // Verification of 1d system matrix
     Heat<1,double> Heat1d(0.3125, 0.1, 3);
     std::cout << Heat1d.getMatrix() << std::endl;
-
     // Verification of 2d system matrix
     Heat<2,double> Heat2d(0.3125, 0.1, 3);
     std::cout << Heat2d.getMatrix() << std::endl;
-
     return 0;
 }
 */
