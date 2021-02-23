@@ -399,10 +399,6 @@ class Heat
             M.print_matrix();
         }
         
-        Matrix<T> get_matrix() const
-        {
-            return M;
-        }
 
 
         Vector<T> exact(T t) const
@@ -451,140 +447,13 @@ class Heat
             cout<<" Non convergences: "<<nnc<<endl;
             return sol;
         }
+
 };
-
-
-int main()
-{
-    const Vector<int> a();
-    
-    Vector<int> b({1,2});
-    Vector<int> c(b);
-    Vector<int> f = b + c;
-    Vector<int> x({1,1});
-    f=f*8;
-
-    Matrix<int> A(2,2);
-
-    A[{0,0}] =2;
-    A[{1,1}] =3;
-    cout<< (A*b)[1] << endl;
-
-    int S = cg<int>(A, b, x);
-    
-    }
-    
-    //cout<<A[{0,1}];
-    
-    //Vector<int> d = A*b;
-    //cout<<d[0];
-
-    Heat<2,double> Aa(0.3125, 99, 0.001);
-    
-    Vector<double> ex = Aa.exact(1.);
-    Vector<double> num = Aa.solve(1.);      
-
-    for (int i = 0; i < ex.len(); i++)
-    {
-        cout<<ex[i] - num[i]<<" "<<endl;
-    }
-    
-    /*/
-    Matrix<double> mat = Aa.get_matrix();
-    for (int i = 0; i < mat.row(); i++) 
-    { 
-        for (int j = 0; j < mat.col(); j++) 
-        { 
-            cout << mat[{i,j}]<< " "; 
-        }
-        
-    // Newline for new row 
-    cout << endl; 
-    }   
-    */
-    
-
-    return 0;
-}
-
-/*
 
 
 int main(int argc, char* argv[])
 {
-    
-    // Verification of 1d system matrix
-    Heat<1,double> Heat1d(0.3125, 0.1, 3);
-    std::cout << Heat1d.getMatrix() << std::endl;
-    // Verification of 2d system matrix
-    Heat<2,double> Heat2d(0.3125, 0.1, 3);
-    std::cout << Heat2d.getMatrix() << std::endl;
+
     return 0;
 }
-*/
 
-
-
-           
-        
-        // Ina's implementation
-        /*for (int i = 0; i < points; i++)
-        {
-            for (int j = 0; j< points; j++)
-            {
-
-                if(i == j)
-                {
-                    M[i,j] = 1 + alpha*(dt/(dx*dx))*(2*n);
-                }
-                else
-                {
-                    for (auto k = 0; k<n-1; k++)
-                    {   
-                        if (i%pow(m,k) != 0 && (i+1)%pow(m,k) != 0 ) // NOT boundary points
-                        {
-                            M[i,j + pow(m,k)] = 1 + alpha*(dt/(dx*dx));
-                            M[i,j - pow(m,k)] = 1 + alpha*(dt/(dx*dx));
-                        }
-                        else if (i%pow(m,k) = 0)  // no left neighbour in dimension k
-                        {
-                            M[i,j + pow(m,k)] = 1 + alpha*(dt/(dx*dx)); // only right neighbour in dim k
-                        }
-                        else if ((i+1)%pow(m,k) = 0)  // no right neighbour in dimension k
-                        {
-                            M[i,j - pow(m,k)] = 1 + alpha*(dt/(dx*dx)); // only left neighbour in dim k
-                        }
-                        
-                    }
-                    
-                }      
-            } 
-        }
-
-            // smito TEST
-            int points = (int) pow(mu,n);
-            Matrix<T> M( points, points );
-            T dx=1/(mu+1);
-            
-            
-            for (int i = 0; i < points; i++)
-            {
-                M[{i,i}] = 1 + alpha*(dt/(dx*dx))*(2*n);
-                
-                for (int j = i+1; j < points; j++)
-                {      
-                    for(int k = 0; k < n; k++)
-                    {
-                        if((j-i)==pow(m,k) && !(j%pow(m,k+1) < pow(m,k)) )
-                        {
-                            M[{i,j}] = -alpha*(dt/(dx*dx));
-                            M[{j,i}] = -alpha*(dt/(dx*dx));
-                        }
-                    }                   
-                }
-            }
-            */
-            // Loop magic              }
-            
-            
-            // Loop magic
